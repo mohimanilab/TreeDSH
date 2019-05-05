@@ -1,0 +1,10 @@
+#!/bin/bash
+#SBATCH -p moh1 # partition (queue)
+#SBATCH -N 1 # number of nodes
+#SBATCH -n 10 # number of cores
+#SBATCH --mem 12000 # memory pool for all cores
+#SBATCH -t 1-00:00 # time (D-HH:MM)
+#SBATCH -o test.out # STDOUT
+#SBATCH -e test.err # STDERR
+./bruteforce
+./treehash 1 228 -6.5

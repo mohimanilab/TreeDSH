@@ -1,0 +1,39 @@
+TREEHASH: Working with b = 100 and threshold = -6
+
+Creating data 
+Done in 1639 ms
+
+Creating hash trees 
+Done in 4107 ms
+
+Creating matches 
+1025158 matches found
+9932 real matches found
+Done in 483 ms
+
+MINHASH: Working with b = 100 and r = 5
+
+Creating data
+Done in 1674 ms
+
+Making hashes and putting them in buckets
+Done in 2600 ms
+
+Creating matches
+1764405 matches found
+9937 real matches found
+Done in 803 ms
+
+LSH: Working with b = 100 and r = 14
+
+Creating data
+Done in 1645 ms
+
+Making hashes and putting them in buckets
+Done in 3677 ms
+
+Creating matches
+2037986 matches found
+9940 real matches found
+Done in 757 ms
+

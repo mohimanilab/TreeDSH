@@ -1,0 +1,9 @@
+TREEHASH: Working with b = 50 and threshold = -4.9
+
+Creating data 
+Done in 16664 ms
+
+Creating hash trees 
+Done in 3570 ms
+
+Creating matches 
