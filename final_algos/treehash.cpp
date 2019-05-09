@@ -13,8 +13,8 @@ using namespace std;
 typedef chrono::high_resolution_clock Clock;
 
 // mass spectrometry related variables
-string specfile = "../summer/brownian/PRM_plus.mgf";
-string pepfile = "../summer/brownian/uniprot-proteome_homo_sapiens_reference_proteome_5_23_2016.fasta";
+string specfile = "PRM_plus.mgf";
+string pepfile = "uniprot-proteome_homo_sapiens_reference_proteome_5_23_2016.fasta";
 vector <int> ids{4910}; 
 vector <string> bestpeps{"SGETEDTFIADLVVGLCTGQIK"};
 
@@ -452,9 +452,11 @@ void get_only_spectra() {
 }
 
 
-void simulated_data_setup(char** argv) {
+void simulated_data_setup(int argc, char** argv) {
 
-    P = set_pq_values(atof(argv[4]), atof(argv[5]), atof(argv[6]), atof(argv[7]));
+    // Use default probability matrix if values not provided
+    if (argc < 8) P = set_pq_values(0.215, 0.0025, 0.255, 0.5275);
+    else P = set_pq_values(atof(argv[4]), atof(argv[5]), atof(argv[6]), atof(argv[7]));
     pair <vector<vector<bool> >, vector<vector<bool> > > vecs;
     vecs = make_data(P, N, T);
     X = vecs.first;
@@ -493,7 +495,7 @@ int main(int argc, char** argv) {
     auto cstart = Clock::now();   
     
     // Simulated data
-    simulated_data_setup(argv);
+    simulated_data_setup(argc, argv);
 
     // Mass spectra data
     // msgf_data_setup();    

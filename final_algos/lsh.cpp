@@ -18,10 +18,14 @@ typedef chrono::high_resolution_clock Clock;
 // mass spectrometry related variables
 string specfile = "PRM_plus.mgf";
 string pepfile = "uniprot-proteome_homo_sapiens_reference_proteome_5_23_2016.fasta";
-vector <int> ids{4403, 4164, 4162, 5157, 4163, 4910, 4911, 4404, 4165, 4405};    
+vector <int> ids{4910}; 
+vector <string> bestpeps{"SGETEDTFIADLVVGLCTGQIK"};
 
 // peptide names
 vector <string> pep_names;
+
+// spectra length
+int max_spec_len = 0;
 
 // The 2 sets of vectors that need to be compared
 vector <vector <bool> > X;
@@ -45,6 +49,41 @@ vector <set<int> > match_hashes;
 
 // fp and tp rates;
 double fp, tp, expfp;
+
+
+probs get_ms_pq_values() {
+    
+    double n00 = 0, n01 = 0, n10 = 0, n11 = 0;
+    
+    for (int i = 0; i < X.size(); i++) {
+        double *t_prm;
+        double *t_srm;
+        double t_mass;
+        theoretical_vector(0, bestpeps[i], t_prm, t_srm, t_mass);
+
+        unordered_set <int> pep_ones;
+        for (int j = 0; j < bestpeps[i].length() - 1; j++) pep_ones.insert(t_prm[j]);
+        for (int j = 0; j < bestpeps[i].length() - 1; j++) pep_ones.insert(t_srm[j] + max_spec_len);
+
+        for (int j = 0; j < 2 * max_spec_len; j++) {
+            if (X[i][j] == 0) {
+                if (pep_ones.find(j) == pep_ones.end()) n00 += 1;
+                else n01 += 1;
+            }
+            else {
+                if (pep_ones.find(j) == pep_ones.end()) n10 += 1;
+                else n11 += 1; 
+            }
+        }
+    }
+
+    n00 /= (X.size() * 2 * max_spec_len);
+    n01 /= (X.size() * 2 * max_spec_len);
+    n10 /= (X.size() * 2 * max_spec_len);
+    n11 /= (X.size() * 2 * max_spec_len);
+
+    return set_pq_values(n00, n01, n10, n11);
+}
 
 
 vector <vector<int> > lsh_hasher(vector<vector<bool> > vecs, int num_hashes) {
@@ -82,16 +121,12 @@ void hashing_and_bucketing() {
         for (int j = 0; j < X[i].size(); j++) {
             if (X[i][j] == 1) sum++;
         }
-        cout<<sum<<endl;
     }
 
     buckets.resize(b);
-    cout<<"Hashing X\n";
     hashx = lsh_hasher(X, r * b);
-    cout<<"Hashing Y\n";
     hashy = lsh_hasher(Y, r * b); 
     
-    cout<<"Bucketing X\n";
     for (int i = 0; i < X.size(); i++) {
         vector <int> hashes;
         for (int j = 0; j < r * b; j++) hashes.push_back(hashx[j][i]);
@@ -116,7 +151,6 @@ void hashing_and_bucketing() {
         }
     }
     
-    cout<<"Bucketing Y\n";
     for (int i = 0; i < Y.size(); i++) {
         vector <int> hashes;
         for (int j = 0; j < r * b; j++) hashes.push_back(hashy[j][i]);
@@ -227,9 +261,35 @@ void obtain_msgf_matches() {
 }
 
 
+void simulated_data_setup(int argc, char** argv) {
+
+    // Use default probability matrix if values not provided
+    if (argc < 8) P = set_pq_values(0.215, 0.0025, 0.255, 0.5275);
+    else P = set_pq_values(atof(argv[4]), atof(argv[5]), atof(argv[6]), atof(argv[7]));
+    pair <vector<vector<bool> >, vector<vector<bool> > > vecs;
+    vecs = make_data(P, N, T);
+    X = vecs.first;
+    Y = vecs.second;
+    return;
+}
+
+
+void msgf_data_setup() {
+	
+    pair <pair <vector<vector<bool> >, vector<vector<bool> > >, vector <string> > vecs;
+    vecs = get_mass_spec_data(specfile, pepfile, ids);
+    X = vecs.first.first;
+    Y = vecs.first.second;
+    pep_names = vecs.second;
+    max_spec_len = X[0].size() / 2;
+    P = get_ms_pq_values();
+    return;
+}
+
+
 int main(int argc, char** argv) {
 
-    if (argc < 8) {
+    if (argc < 4) {
         cout<<"Too few arguments\n";
         return 0;
     }
@@ -238,32 +298,16 @@ int main(int argc, char** argv) {
     b = atoi(argv[2]);
     r = atoi(argv[3]);
 
-    P = set_pq_values(atof(argv[4]), atof(argv[5]), atof(argv[6]), atof(argv[7]));
-    get_expfp();
-
-    // we dont need N and p00, p01, p10, p11 if we get mass spectrometry data, so those
-    // parameters are just ignored in that case.
-
     //cout<<"Creating data\n";
     auto cstart = Clock::now(); 
     
-    // The simulated data case
-    /*
-    pair <vector<vector<bool> >, vector<vector<bool> > > vecs;
-    vecs = make_data(P, N, T);
-    X = vecs.first;
-    Y = vecs.second;
-    */
+    // For simulated data 
+    simulated_data_setup(argc, argv);
 
-    // The mass spectrometry case 
+    // For mass spectrometry data
+    // msgf_data_setup();
     
-    pair<pair <vector<vector<bool> >, vector<vector<bool> > >, vector<string> > vecs;
-    vecs = get_mass_spec_data(specfile, pepfile, ids);
-    X = vecs.first.first;
-    Y = vecs.first.second;
-    pep_names = vecs.second;
-    
-
+    get_expfp();
     auto cend = Clock::now();
     //cout<<"Done in "<<chrono::duration_cast<chrono::milliseconds>(cend-cstart).count()<<" ms\n\n";
     
@@ -276,13 +320,18 @@ int main(int argc, char** argv) {
 
     //cout<<"Creating matches\n";
     cstart = Clock::now();
-    //obtain_all_matches();
-    obtain_msgf_matches();
+    
+    // For simulated data
+    obtain_all_matches();
+
+    // For mass spectrometry data
+    //obtain_msgf_matches();
+
     cend = Clock::now();
     //cout<<"Done in "<<chrono::duration_cast<chrono::milliseconds>(cend-cstart).count()<<" ms\n\n"; 
     double t2 = chrono::duration_cast<chrono::milliseconds>(cend-cstart).count();
 
-    //print_results(N, r, b, expfp, fp, tp, t1, t2);
+    print_results(N, r, b, expfp, fp, tp, t1, t2);
 
     return 0;
 }
