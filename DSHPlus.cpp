@@ -118,16 +118,16 @@ probs* generateProbability(int size) {
 }
 
 //Generate 1000 pairs of length 100 strings based on a probability distribution
-std::pair<std::vector<istring*>, std::vector<istring*>> generateStrings(probs* prob) {
+std::pair<std::vector<istring*>, std::vector<istring*>> generateStrings(probs* prob, int numStrings, int strLength) {
     std::vector<istring*> xs, ys;
-    for(int i = 0; i < 1000; ++i) {
+    for(int i = 0; i < numStrings; ++i) {
         istring *x = new istring();
         istring *y = new istring();
         x -> id = i;
         y -> id = i;
         std::string xstr = "";
         std::string ystr = "";
-        for(int j = 0; j < 100; j++) {
+        for(int j = 0; j < strLength; j++) {
             double roll = double(rand() / (double)RAND_MAX);
             int newX = 0;
             int newY = 0;
@@ -508,7 +508,7 @@ int main(int argc, const char * argv[]) {
     tnode *ytree = trees.second;
     
     //Generate the random pairs
-    std::pair<std::vector<istring*>, std::vector<istring*>> strs = generateStrings(prob);
+    std::pair<std::vector<istring*>, std::vector<istring*>> strs = generateStrings(prob, 1000, 100);
     std::vector<istring*> xs = strs.first;
     std::vector<istring*> ys = strs.second;
     
