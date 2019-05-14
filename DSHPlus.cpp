@@ -223,10 +223,10 @@ std::pair<double, double> calculateLambdas(probs* prob) {
     for(double i = 0.0; i <= 99.0; i += 0.1) {
         double l2 = approxT(prob, i);
         arr rijs;
-        for(int i = 0; i < (prob -> p).size(); i++) {
+        for(int k = 0; k < (prob -> p).size(); k++) {
             std::vector<double> newrow;
             for(int j = 0; j < (prob -> p).size(); j++) {
-                newrow.push_back(computerij(R, (prob -> p).at(i).at(j), (prob -> q).at(i).at(j), i + 1, l2));
+                newrow.push_back(computerij(R, (prob -> p).at(k).at(j), (prob -> q).at(k).at(j), i + 1, l2));
             }
             rijs.push_back(newrow);
         }
@@ -238,11 +238,11 @@ std::pair<double, double> calculateLambdas(probs* prob) {
         //rij * log(qij)
         double val3 = 0.0;
         
-        for(int i = 0; i < (prob -> p).size(); i++) {
+        for(int k = 0; k < (prob -> p).size(); k++) {
             for(int j = 0; j < (prob -> p).size(); j++) {
-                val1 += rijs.at(i).at(j) * log(rijs.at(i).at(j));
-                val2 += rijs.at(i).at(j) * log((prob -> p).at(i).at(j));
-                val3 += rijs.at(i).at(j) * log((prob -> q).at(i).at(j));
+                val1 += rijs.at(k).at(j) * log(rijs.at(k).at(j));
+                val2 += rijs.at(k).at(j) * log((prob -> p).at(k).at(j));
+                val3 += rijs.at(k).at(j) * log((prob -> q).at(k).at(j));
             }
         }
         
